@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>My Habit Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #E6A817;
+  --bg: #FAFAF8;
+  --surface: #FFFFFF;
+  --border: #E8E6E0;
+  --text: #1A1A18;
+  --muted: #8A8880;
+  --accent: #2D2D2A;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 60px; }
+
+header {
+  background: var(--accent); color: white;
+  padding: 20px 20px 18px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  position: sticky; top: 0; z-index: 10;
+}
+.header-title { font-family: 'DM Serif Display', serif; font-size: 22px; letter-spacing: -0.3px; }
+.month-nav { display: flex; align-items: center; gap: 10px; }
+.nav-btn {
+  background: rgba(255,255,255,0.12); border: none; color: white;
+  width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+  font-size: 16px; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s; flex-shrink: 0;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.22); }
+.month-label { font-size: 15px; font-weight: 500; min-width: 130px; text-align: center; }
+.sync-status { font-size: 11px; color: rgba(255,255,255,0.55); display: flex; align-items: center; gap: 5px; }
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #6fcf97; }
+.sync-dot.syncing { background: var(--gold); animation: pulse 1s infinite; }
+.sync-dot.error { background: #eb5757; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+.section-label { font-family: 'DM Serif Display', serif; font-size: 19px; margin-bottom: 14px; color: var(--accent); }
+
+/* DESKTOP TABLE */
+.table-wrap { overflow-x: auto; margin-bottom: 36px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+thead th {
+  background: var(--accent); color: rgba(255,255,255,0.8);
+  font-weight: 400; font-size: 11px; letter-spacing: 0.6px; text-transform: uppercase;
+  padding: 11px 12px; border-bottom: 1px solid rgba(255,255,255,0.08);
+  white-space: nowrap; text-align: center;
+}
+thead th.date-h { text-align: left; }
+tbody tr { border-bottom: 1px solid var(--border); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: #FAFAF6; }
+tbody tr.weekend { background: #F7F6F2; }
+td { padding: 3px 6px; text-align: center; vertical-align: middle; }
+td.date-cell { text-align: left; padding: 4px 12px; font-size: 12px; color: var(--muted); white-space: nowrap; font-weight: 500; min-width: 75px; }
+td.date-cell .day-name { font-size: 10px; font-weight: 300; display: block; color: #bbb; }
+.star-btn { background: none; border: none; cursor: pointer; font-size: 28px; line-height: 1; padding: 3px; color: #D9D6CE; transition: transform 0.12s; display: inline-block; }
+.star-btn:hover { transform: scale(1.2); }
+.star-btn.on { color: var(--gold); }
+.exp-row td { background: #F5F4F0; font-size: 11px; color: var(--muted); text-align: left; padding: 9px 12px; line-height: 1.6; border-top: 1px solid var(--border); }
+.exp-row td.exp-label { font-weight: 500; color: var(--accent); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.t2-note-cell { text-align: left; padding: 4px 10px; min-width: 280px; }
+.t2-row { display: flex; align-items: center; gap: 6px; }
+.note-input { flex: 1; border: none; background: transparent; font-size: 12px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; padding: 4px 0; border-bottom: 1px solid transparent; transition: border-color 0.15s; min-width: 0; }
+.note-input:focus { border-bottom-color: var(--border); }
+.note-input::placeholder { color: #C8C5BC; }
+
+/* MOBILE CARDS */
+.mobile-section { display: none; margin-bottom: 36px; }
+.day-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+.day-card.weekend { background: #F7F6F2; }
+.card-date { background: var(--accent); color: rgba(255,255,255,0.85); padding: 8px 14px; font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: space-between; }
+.card-date .day-lbl { font-size: 10px; color: rgba(255,255,255,0.5); }
+.card-habits { display: grid; grid-template-columns: 1fr 1fr; }
+.habit-item { padding: 10px 12px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.habit-item:nth-child(even) { border-right: none; }
+.habit-item:nth-last-child(-n+2) { border-bottom: none; }
+.habit-name { font-size: 11px; color: var(--muted); flex: 1; }
+.star-sm { background: none; border: none; cursor: pointer; font-size: 26px; line-height: 1; padding: 2px; color: #D9D6CE; flex-shrink: 0; }
+.star-sm.on { color: var(--gold); }
+.t2-habit-row { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.t2-habit-row:last-child { border-bottom: none; }
+.t2-habit-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+.t2-star-note { display: flex; align-items: center; gap: 8px; }
+.note-input-m { flex: 1; border: none; background: transparent; font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; padding: 4px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.note-input-m::placeholder { color: #C8C5BC; }
+.guide-toggle { background: #F5F4F0; border: none; border-top: 1px solid var(--border); width: 100%; text-align: left; padding: 10px 14px; font-size: 11px; color: var(--muted); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-family: 'DM Sans', sans-serif; }
+.guide-content { display: none; background: #F5F4F0; }
+.guide-content.open { display: block; }
+.guide-item { font-size: 11px; color: var(--muted); padding: 8px 14px; line-height: 1.5; border-top: 1px solid var(--border); }
+.guide-item strong { color: var(--accent); font-weight: 500; display: block; margin-bottom: 2px; }
+
+.loading { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 14px; }
+.loading-spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 680px) {
+  .table-wrap { display: none; }
+  .mobile-section { display: block; }
+  main { padding: 16px 12px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">Habit Tracker</div>
+  <div class="month-nav">
+    <button class="nav-btn" id="prevBtn">&#8592;</button>
+    <div class="month-label" id="monthLabel"></div>
+    <button class="nav-btn" id="nextBtn">&#8594;</button>
+  </div>
+  <div class="sync-status">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncText">Connected</span>
+  </div>
+</header>
+
+<main>
+  <div id="loadingDiv" class="loading"><div class="loading-spinner"></div>Loading your data...</div>
+  <div id="content" style="display:none">
+
+    <div class="section-label">Daily habits</div>
+    <div class="table-wrap">
+      <table id="t1"><thead><tr>
+        <th class="date-h">Date</th>
+        <th>Breakfast</th><th>Lunch</th><th>Water</th><th>No DoorDash</th><th>Movement</th><th>Sleep</th>
+      </tr></thead><tbody id="t1body"></tbody><tfoot id="t1foot"></tfoot></table>
+    </div>
+    <div class="mobile-section" id="mob1"></div>
+
+    <div class="section-label">Meaningful days</div>
+    <div class="table-wrap">
+      <table id="t2" style="width:100%;min-width:700px"><thead><tr>
+        <th class="date-h" style="width:90px">Date</th>
+        <th>Do one meaningful thing</th>
+        <th>Socialize with someone</th>
+      </tr></thead><tbody id="t2body"></tbody><tfoot id="t2foot"></tfoot></table>
+    </div>
+    <div class="mobile-section" id="mob2"></div>
+
+  </div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAvcKZ6UwfOWpABvGCY-QUgcwN1aTlfJyo",
+  authDomain: "my-tracker-7ff0f.firebaseapp.com",
+  projectId: "my-tracker-7ff0f",
+  storageBucket: "my-tracker-7ff0f.firebasestorage.app",
+  messagingSenderId: "561746261156",
+  appId: "1:561746261156:web:dd393ef70e9fd219726231"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const h1 = ['Breakfast','Lunch','Water','No DoorDash','Movement','Sleep'];
+const e1 = ['Eat anything within 1 hr after waking up','Eat something or take a 20-min break, no screen','2 glasses of water','No DoorDash orders today','10k steps or 30 mins of any exercise',"7 hrs of sleep — timing doesn't matter"];
+const h2 = ['Do one meaningful thing','Socialize with someone'];
+const e2 = ['Cooking, cleaning, laundry, to-do list, creative, learning — anything intentional other than TV/movie or scrolling. Write down what you did.','Online chat, text, call, party, long convo with a stranger — anything that makes a connection. Write down names or activity.'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth();
+let monthData = {};
+let saveTimer = null;
+
+const monthKey = () => `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
+const getDaysInMonth = (y,m) => new Date(y,m+1,0).getDate();
+const getDayRows = () => Array.from({length: getDaysInMonth(currentYear,currentMonth)}, (_,i) => {
+  const d = new Date(currentYear,currentMonth,i+1);
+  return {num:i+1, dayName:DAYS[d.getDay()], isWeekend:d.getDay()===0||d.getDay()===6};
+});
+
+function setSync(s) {
+  document.getElementById('syncDot').className='sync-dot'+(s==='syncing'?' syncing':s==='error'?' error':'');
+  document.getElementById('syncText').textContent=s==='syncing'?'Saving...':s==='error'?'Offline':'Saved';
+}
+
+async function loadMonth() {
+  document.getElementById('loadingDiv').style.display='block';
+  document.getElementById('content').style.display='none';
+  setSync('syncing');
+  try {
+    const snap = await getDoc(doc(db,'tracker',monthKey()));
+    monthData = snap.exists() ? snap.data() : {};
+    setSync('ok');
+  } catch(e) { setSync('error'); monthData={}; }
+  document.getElementById('loadingDiv').style.display='none';
+  document.getElementById('content').style.display='block';
+  renderAll();
+}
+
+function scheduleSave() {
+  setSync('syncing');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try { await setDoc(doc(db,'tracker',monthKey()), monthData); setSync('ok'); }
+    catch(e) { setSync('error'); }
+  }, 800);
+}
+
+const getD1 = k => { if(!monthData[`d1_${k}`]) monthData[`d1_${k}`]=h1.map(()=>false); return monthData[`d1_${k}`]; };
+const getD2 = k => { if(!monthData[`d2_${k}`]) monthData[`d2_${k}`]=h2.map(()=>({on:false,note:''})); return monthData[`d2_${k}`]; };
+
+function mkStar(on, cls, fn) {
+  const b=document.createElement('button'); b.type='button';
+  b.className=cls+(on?' on':''); b.textContent=on?'★':'☆';
+  b.addEventListener('click',fn); return b;
+}
+
+function renderAll() {
+  document.getElementById('monthLabel').textContent=`${MONTHS[currentMonth]} ${currentYear}`;
+  renderT1(); renderT2(); renderMob1(); renderMob2();
+}
+
+function renderT1() {
+  const tb=document.getElementById('t1body'); tb.innerHTML='';
+  getDayRows().forEach(day=>{
+    const k=`${currentMonth+1}/${day.num}`, data=getD1(k);
+    const tr=document.createElement('tr'); if(day.isWeekend) tr.className='weekend';
+    const td0=document.createElement('td'); td0.className='date-cell';
+    td0.innerHTML=`${MONTHS[currentMonth].slice(0,3)} ${day.num}<span class="day-name">${day.dayName}</span>`;
+    tr.appendChild(td0);
+    h1.forEach((_,i)=>{
+      const td=document.createElement('td');
+      td.appendChild(mkStar(data[i],'star-btn',()=>{ data[i]=!data[i]; monthData[`d1_${k}`]=data; scheduleSave(); renderT1(); renderMob1(); }));
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+  const tf=document.getElementById('t1foot'); tf.innerHTML='';
+  const er=document.createElement('tr'); er.className='exp-row';
+  const el=document.createElement('td'); el.className='exp-label'; el.textContent='Guide'; er.appendChild(el);
+  e1.forEach(e=>{ const td=document.createElement('td'); td.textContent=e; er.appendChild(td); });
+  tf.appendChild(er);
+}
+
+function renderT2() {
+  const tb=document.getElementById('t2body'); tb.innerHTML='';
+  getDayRows().forEach(day=>{
+    const k=`${currentMonth+1}/${day.num}`, data=getD2(k);
+    const tr=document.createElement('tr'); if(day.isWeekend) tr.className='weekend';
+    const td0=document.createElement('td'); td0.className='date-cell';
+    td0.innerHTML=`${MONTHS[currentMonth].slice(0,3)} ${day.num}<span class="day-name">${day.dayName}</span>`;
+    tr.appendChild(td0);
+    h2.forEach((_,i)=>{
+      const td=document.createElement('td'); td.className='t2-note-cell';
+      const wrap=document.createElement('div'); wrap.className='t2-row';
+      const {on,note}=data[i];
+      wrap.appendChild(mkStar(on,'star-btn',()=>{ data[i].on=!data[i].on; monthData[`d2_${k}`]=data; scheduleSave(); renderT2(); renderMob2(); }));
+      const inp=document.createElement('input'); inp.className='note-input'; inp.placeholder='add notes...'; inp.value=note;
+      inp.addEventListener('input',e=>{ data[i].note=e.target.value; monthData[`d2_${k}`]=data; scheduleSave(); });
+      wrap.appendChild(inp); td.appendChild(wrap); tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+  const tf=document.getElementById('t2foot'); tf.innerHTML='';
+  const er=document.createElement('tr'); er.className='exp-row';
+  const el=document.createElement('td'); el.className='exp-label'; el.textContent='Guide'; er.appendChild(el);
+  e2.forEach(e=>{ const td=document.createElement('td'); td.textContent=e; er.appendChild(td); });
+  tf.appendChild(er);
+}
+
+function renderMob1() {
+  const c=document.getElementById('mob1'); c.innerHTML='';
+  getDayRows().forEach(day=>{
+    const k=`${currentMonth+1}/${day.num}`, data=getD1(k);
+    const card=document.createElement('div'); card.className='day-card'+(day.isWeekend?' weekend':'');
+    card.innerHTML=`<div class="card-date"><span>${MONTHS[currentMonth].slice(0,3)} ${day.num}</span><span class="day-lbl">${day.dayName}</span></div>`;
+    const grid=document.createElement('div'); grid.className='card-habits';
+    h1.forEach((name,i)=>{
+      const item=document.createElement('div'); item.className='habit-item';
+      const lbl=document.createElement('span'); lbl.className='habit-name'; lbl.textContent=name;
+      item.appendChild(lbl);
+      item.appendChild(mkStar(data[i],'star-sm',()=>{ data[i]=!data[i]; monthData[`d1_${k}`]=data; scheduleSave(); renderT1(); renderMob1(); }));
+      grid.appendChild(item);
+    });
+    card.appendChild(grid); c.appendChild(card);
+  });
+  addGuide(c, h1, e1);
+}
+
+function renderMob2() {
+  const c=document.getElementById('mob2'); c.innerHTML='';
+  getDayRows().forEach(day=>{
+    const k=`${currentMonth+1}/${day.num}`, data=getD2(k);
+    const card=document.createElement('div'); card.className='day-card'+(day.isWeekend?' weekend':'');
+    card.innerHTML=`<div class="card-date"><span>${MONTHS[currentMonth].slice(0,3)} ${day.num}</span><span class="day-lbl">${day.dayName}</span></div>`;
+    h2.forEach((name,i)=>{
+      const row=document.createElement('div'); row.className='t2-habit-row';
+      const lbl=document.createElement('div'); lbl.className='t2-habit-label'; lbl.textContent=name;
+      const sn=document.createElement('div'); sn.className='t2-star-note';
+      const {on,note}=data[i];
+      sn.appendChild(mkStar(on,'star-sm',()=>{ data[i].on=!data[i].on; monthData[`d2_${k}`]=data; scheduleSave(); renderT2(); renderMob2(); }));
+      const inp=document.createElement('input'); inp.className='note-input-m'; inp.placeholder='add notes...'; inp.value=note;
+      inp.addEventListener('input',e=>{ data[i].note=e.target.value; monthData[`d2_${k}`]=data; scheduleSave(); });
+      sn.appendChild(inp); row.appendChild(lbl); row.appendChild(sn); card.appendChild(row);
+    });
+    c.appendChild(card);
+  });
+  addGuide(c, h2, e2);
+}
+
+function addGuide(container, names, exps) {
+  const wrap=document.createElement('div');
+  const btn=document.createElement('button'); btn.className='guide-toggle'; btn.innerHTML='View guide <span>▼</span>';
+  const content=document.createElement('div'); content.className='guide-content';
+  names.forEach((name,i)=>{ content.innerHTML+=`<div class="guide-item"><strong>${name}</strong>${exps[i]}</div>`; });
+  btn.addEventListener('click',()=>{ content.classList.toggle('open'); btn.querySelector('span').textContent=content.classList.contains('open')?'▲':'▼'; });
+  wrap.appendChild(btn); wrap.appendChild(content); container.appendChild(wrap);
+}
+
+document.getElementById('prevBtn').addEventListener('click',()=>{ currentMonth--; if(currentMonth<0){currentMonth=11;currentYear--;} loadMonth(); });
+document.getElementById('nextBtn').addEventListener('click',()=>{ currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;} loadMonth(); });
+
+loadMonth();
+</script>
+</body>
+</html>
